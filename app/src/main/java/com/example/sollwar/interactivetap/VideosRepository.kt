@@ -2,7 +2,7 @@ package com.example.sollwar.interactivetap
 
 import android.net.Uri
 
-class Videos(
+class VideosRepository(
     private val packageName: String
 ) {
 

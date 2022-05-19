@@ -1,13 +1,10 @@
 package com.example.sollwar.interactivetap
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.marginLeft
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.sollwar.interactivetap.databinding.FragmentInteractiveBinding
 import kotlinx.coroutines.*
@@ -15,10 +12,12 @@ import kotlinx.coroutines.*
 
 class InteractiveFragment : Fragment() {
 
-    private val viewModel by viewModels<ViewModelInteractiveFragment>()
-
     private var _binding: FragmentInteractiveBinding? = null
     private val binding get() = _binding!!
+
+    // Скорость перемещения кнопки по осям
+    private var deltaX = 3f
+    private var deltaY = 3f
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -27,22 +26,40 @@ class InteractiveFragment : Fragment() {
     ): View {
         _binding = FragmentInteractiveBinding.inflate(inflater, container, false)
 
-        val videos = Videos(requireActivity().packageName)
+        // Временный репозиторий с видео
+        val videosRepository = VideosRepository(requireActivity().packageName)
 
-        binding.videoView.setVideoURI(videos.nextVideo())
+        binding.videoView.setVideoURI(videosRepository.nextVideo())
         binding.videoView.start()
 
         binding.playButton.setOnClickListener {
-            binding.videoView.setVideoURI(videos.nextVideo())
+            binding.videoView.setVideoURI(videosRepository.nextVideo())
             binding.videoView.start()
         }
 
+        // Вечный цикл для анимации
         lifecycleScope.launch {
             while (true) {
-                delay(100L)
+                // ~ 60 fps
+                delay(16L)
+
                 val currentDuration = binding.videoView.duration
                 val currentPosition = binding.videoView.currentPosition
                 binding.progressBar.progress = (currentPosition * 100) / currentDuration
+
+                binding.playButton.x += deltaX
+                binding.playButton.y += deltaY
+
+                if (binding.videoView.height > 0 && binding.playButton.y >= binding.videoView.height - 120) {
+                    deltaY = -deltaY
+                } else if (binding.videoView.height > 0 && binding.playButton.y <= - 38) {
+                    deltaY = -deltaY
+                }
+                if (binding.videoView.width > 0 && binding.playButton.x >= binding.videoView.width - 100) {
+                    deltaX = -deltaX
+                } else if (binding.videoView.width > 0 && binding.playButton.x <= - 38) {
+                    deltaX = -deltaX
+                }
             }
         }
 
